@@ -1,0 +1,17 @@
+---
+ - hosts: localhost
+   vars: 
+      state: planned
+      region: 
+      bucket: 
+      key: 
+   tasks: 
+     - name: Run Terraform Scripts
+       terraform:
+         project_path: "./"
+         state: "{{ state }}"
+         backend_config:
+           region: "{{ region }}"
+           bucket: "{{ bucket }}"
+           key: "{{ key }}"
+         plan_file: tfplan

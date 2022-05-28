@@ -1,0 +1,51 @@
+pipeline{
+  agent {label 'slave-node-1'}
+
+  environment {
+    PATH = "${PATH}:${getTerraformPath()}"
+
+  }
+  options {
+    ansiColor('xterm')
+  }
+  stages{
+  stage('terraform init and plan '){
+       when { expression {ACTION == "plan" || ACTION == "apply"} }
+        steps{
+
+          script {
+            if (ACTION == "plan") {
+               STATE = "planned"
+            }
+            if (ACTION == "apply") {
+               STATE = "present"
+            }
+          }
+          sh "pwd"
+          sh 'ls -la'
+          dir("clark-consul") {
+            sh "rm -rf .terraform*"
+            sh "terraform init"
+            sh "pwd"
+            sh "ls -la"
+            sh "ansible-playbook terraform.yml -e state=${STATE}"
+        }
+      }
+    }
+    stage('terraform out file')
+    {
+      when { expression {ACTION == "plan"} }
+      steps{
+        sh "pwd"
+        sh 'ls -la'
+        dir("clark-consul") {
+          sh "terraform show tfplan"
+        }
+      }
+    }
+  }
+}
+def getTerraformPath(){
+  def tfHome = tool name: 'terraform-14', type: 'terraform'
+  return tfHome
+}
